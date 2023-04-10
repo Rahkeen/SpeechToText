@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,9 +16,7 @@ class AppViewModel(private val stt: SpeechToText) : ViewModel() {
     viewModelScope.launch {
       with(stt) {
         text.collect { result ->
-          state = state.copy(
-            display = state.display + result
-          )
+          send(AppAction.Update(result))
         }
       }
     }
@@ -41,14 +38,12 @@ class AppViewModel(private val stt: SpeechToText) : ViewModel() {
           )
         }
       }
+      is AppAction.Update -> {
+        state = state.copy(
+          display = state.display + action.text
+        )
+      }
     }
-  }
-}
-
-@Suppress("UNCHECKED_CAST")
-class AppViewModelFactory(private val stt: SpeechToText) : ViewModelProvider.NewInstanceFactory() {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    return AppViewModel(stt) as T
   }
 }
 
@@ -59,4 +54,5 @@ data class AppState(
 sealed class AppAction {
   object StartRecord : AppAction()
   object EndRecord : AppAction()
+  data class Update(val text: String): AppAction()
 }

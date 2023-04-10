@@ -1,7 +1,6 @@
 package co.rikin.speechtotext
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -30,12 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.rikin.speechtotext.ui.theme.MaterialRed
 import co.rikin.speechtotext.ui.theme.SpeechToTextTheme
@@ -58,9 +56,7 @@ class MainActivity : ComponentActivity() {
     WindowCompat.setDecorFitsSystemWindows(window, false)
 
     setContent {
-      CompositionLocalProvider(LocalApplicationContext provides applicationContext) {
-        App()
-      }
+      App()
     }
   }
 }
@@ -82,11 +78,11 @@ fun App() {
     permission = granted
   }
 
-  val viewModel = viewModel<AppViewModel>(
-    factory = AppViewModelFactory(
-      stt = RealSpeechToText(LocalApplicationContext.current)
-    )
-  )
+  val viewModel = viewModel {
+    val app = get(APPLICATION_KEY)!!
+    val stt = RealSpeechToText(app.applicationContext)
+    AppViewModel(stt)
+  }
 
   var pressed by remember { mutableStateOf(false) }
   val buttonScale by animateFloatAsState(
@@ -163,8 +159,4 @@ fun App() {
       launcher.launch(Manifest.permission.RECORD_AUDIO)
     }
   }
-}
-
-val LocalApplicationContext = staticCompositionLocalOf<Context> {
-  error("LocalApplicationContext has not been set")
 }
